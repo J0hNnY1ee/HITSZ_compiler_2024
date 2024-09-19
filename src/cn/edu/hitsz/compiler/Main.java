@@ -17,7 +17,7 @@ import cn.edu.hitsz.compiler.utils.IREmulator;
 import java.util.Objects;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args)  {
         // 构建符号表以供各部分使用
         TokenKind.loadTokenKinds();
         final var symbolTable = new SymbolTable();

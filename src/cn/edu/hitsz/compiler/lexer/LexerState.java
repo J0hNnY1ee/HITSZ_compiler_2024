@@ -4,7 +4,4 @@ public enum LexerState {
     START,
     LETTER,
     DIGIT,
-//    MULTI,
-//    QUOTE,
-    EQ
 }

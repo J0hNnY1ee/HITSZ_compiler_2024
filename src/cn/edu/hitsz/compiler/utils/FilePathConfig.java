@@ -4,10 +4,12 @@ package cn.edu.hitsz.compiler.utils;
  * 程序中可能用到的各种路径
  */
 public final class FilePathConfig {
-    //==================================== 输入文件 ========================================//
+    // ==================================== 输入文件
+    // ========================================//
     /**
      * 输入的待编译的源代码
      */
+    public static final String CODING_MAP = "data/in/coding_map.csv";
     public static final String SRC_CODE_PATH = "data/in/input_code.txt";
 
     /**
@@ -25,8 +27,8 @@ public final class FilePathConfig {
      */
     public final static String LR1_TABLE_PATH = "data/in/LR1_table.csv";
 
-
-    //==================================== 输出文件 ========================================//
+    // ==================================== 输出文件
+    // ========================================//
     /**
      * 词法单元流
      */

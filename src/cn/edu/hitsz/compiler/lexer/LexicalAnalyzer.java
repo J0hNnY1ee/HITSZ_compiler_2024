@@ -24,10 +24,11 @@ public class LexicalAnalyzer {
     private static final Logger logger = Logger.getLogger(LexicalAnalyzer.class.getName());
     List<Token> tokens = new ArrayList<>();
     StringBuilder contends = new StringBuilder();
+    private final SymbolTable symbolTable;
 
     public LexicalAnalyzer(SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
     }
-
 
     /**
      * 从给予的路径中读取并加载文件内容
@@ -35,9 +36,6 @@ public class LexicalAnalyzer {
      * @param path 路径
      */
     public void loadFile(String path) {
-        // TODO: 词法分析前的缓冲区实现
-        // 可自由实现各类缓冲区
-        // 或直接采用完整读入方法
         List<String> buffer = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
@@ -65,43 +63,66 @@ public class LexicalAnalyzer {
         LexerState state = LexerState.START;
         tokens = new ArrayList<>();
         StringBuilder tmp = new StringBuilder();
-        for (char c : contends.toString().toCharArray()) {
+        for (int i = 0; i < contends.length(); i++) {
+            char c = contends.charAt(i);
             switch (state) {
                 case START -> {
                     if (Character.isWhitespace(c)) {
                         state = LexerState.START;
                     } else if (Character.isLetter(c)) {
+                        tmp.setLength(0);
+                        tmp.append(c);
                         state = LexerState.LETTER;
                     } else if (Character.isDigit(c)) {
+                        tmp.setLength(0);
+                        tmp.append(c);
                         state = LexerState.DIGIT;
-                    } else if (c == '*') {
-                        state = LexerState.MULTI;
-                    } else if (c == '=') {
-                        state = LexerState.EQ;
-//                    } else if (c == '\"') {
-//                        state = LexerState.QUOTE;
-                    } else if (c == '(') {
-
-                    } else if (c == ')') {
-
-                    } else if (c == ':') {
-
-                    } else if (c == '+') {
-
-                    } else if (c == '-') {
-
-                    } else if (c == '/') {
-
-                    } else if (c == ',') {
-
                     } else if (c == ';') {
+                        tokens.add(Token.simple("Semicolon"));
+                    } else {
+                        // 处理特殊字符
+                        if (c == '*' || c == '=' || c == '(' || c == ')' ||
+                                c == '+' || c == '-' || c == '/' || c == ',') {
+
+                            tokens.add(Token.simple(String.valueOf(c)));
+                        }
+                    }
+                }
+                case LETTER -> {
+                    if (Character.isLetter(c) || Character.isDigit(c)) {
+                        tmp.append(c);
+                    } else {
+                        state = LexerState.START;
+                        i--;
+                        if (tmp.toString().equals("int")) {
+                            tokens.add(Token.simple(tmp.toString()));
+                        } else if (tmp.toString().equals("return")) {
+                            tokens.add(Token.simple(tmp.toString()));
+                        } else {
+                            tokens.add(Token.normal("id", tmp.toString()));
+                            symbolTable.add(tmp.toString());
+                        }
+                        tmp.setLength(0);
 
                     }
                 }
+
+                case DIGIT -> {
+                    if (Character.isDigit(c)) {
+                        tmp.append(c);
+                    } else {
+                        state = LexerState.START;
+                        i--;
+                        tokens.add(Token.normal("IntConst", tmp.toString()));
+                        tmp.setLength(0);
+                    }
+                }
+
+                default -> throw new IllegalArgumentException("Unexpected value: " + state);
             }
         }
-    }
 
+    }
 
     /**
      * 获得词法分析的结果, 保证在调用了 run 方法之后调用
@@ -109,18 +130,14 @@ public class LexicalAnalyzer {
      * @return Token 列表
      */
     public Iterable<Token> getTokens() {
-        // TODO: 从词法分析过程中获取 Token 列表
-        // 词法分析过程可以使用 Stream 或 Iterator 实现按需分析
-        // 亦可以直接分析完整个文件
-        // 总之实现过程能转化为一列表即可
 
-        return null;
+        tokens.add(Token.simple("$"));
+        return tokens;
     }
 
     public void dumpTokens(String path) {
-        FileUtils.writeLines(path, StreamSupport.stream(getTokens().spliterator(), false).map(Token::toString).toList());
+        FileUtils.writeLines(path,
+                StreamSupport.stream(getTokens().spliterator(), false).map(Token::toString).toList());
     }
 
-
 }
-
