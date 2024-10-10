@@ -14,10 +14,12 @@ import java.util.Map;
  * 这个类代表词法单元的类型. 由于根据实验设计, 词法单元的可能的类型需要从码点文件 (codingMap.txt) 中读取,
  * 为了既获得在运行期读取文件的灵活性, 又保证词法单元构造时一些关于类型的 typo 可以被检测到, 我们采取了一定的检查.
  * <br>
- * 同时, 由于后续实验过程还需要读取语法文件 (grammar.txt) 或 LR 分析表 (LR1_table.csv), 为了识别这些文件中的终止符与非终止符,
+ * 同时, 由于后续实验过程还需要读取语法文件 (grammar.txt) 或 LR 分析表 (LR1_table.csv),
+ * 为了识别这些文件中的终止符与非终止符,
  * TokenKind 类还作为终结符, 供表示语法及产生式的类使用. 这就是为什么它继承了 Term (语法项) 作为父类.
  * <br>
- * 如果你目前在完成实验, 那么只需要关注用于构造 TokenKind 的 fromString 与 eof, 用于获得信息的 getIdentifier 与 getCode 即可.
+ * 如果你目前在完成实验, 那么只需要关注用于构造 TokenKind 的 fromString 与 eof, 用于获得信息的 getIdentifier 与
+ * getCode 即可.
  * 倘若你有空探寻一下代码的细致实现, 那么请详见代码中的实现注释, 并同时参考 SeeAlso 中的内容.
  * <br>
  *
