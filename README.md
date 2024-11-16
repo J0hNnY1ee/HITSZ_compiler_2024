@@ -156,7 +156,7 @@ HITSZ_Compiler_2024
 
 - 根据词法规则设计状态转移图如下图所示：
 
-  ![状态转移图](.\状态转移图.png)
+ ![image](https://github.com/user-attachments/assets/d0c7dd13-94e5-41f0-b341-58632f8f61f2)
 
 #### 3.1.4. 词法分析程序设计思路和算法描述
 
