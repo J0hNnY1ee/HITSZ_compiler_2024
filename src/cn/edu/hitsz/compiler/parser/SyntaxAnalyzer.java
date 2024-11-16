@@ -121,9 +121,14 @@ public class SyntaxAnalyzer {
                 Production production = action.getProduction();
                 // 从符号栈和状态栈中弹出产生式右部的符号数
                 for (int i = 0; i < production.body().size(); i++) {
-                    statusStack.removeLast();
-                    symbolStack.removeLast();
+                    if (!statusStack.isEmpty()) {
+                        statusStack.remove(statusStack.size() - 1); // 删除最后一个元素
+                    }
+                    if (!symbolStack.isEmpty()) {
+                        symbolStack.remove(symbolStack.size() - 1); // 删除最后一个元素
+                    }
                 }
+                
                 // 获取规约后的非终结符，并压入符号栈
                 NonTerminal nonTerminal = production.head();
                 symbolStack.add(nonTerminal);
