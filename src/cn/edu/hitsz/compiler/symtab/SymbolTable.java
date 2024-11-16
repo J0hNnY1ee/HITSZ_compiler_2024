@@ -48,7 +48,7 @@ public class SymbolTable {
      * @return 该符号的条目是否位于符号表中
      */
     public boolean has(String text) {
-        return symbolTable.isEmpty();
+        return symbolTable.containsKey(text);
     }
 
     /**

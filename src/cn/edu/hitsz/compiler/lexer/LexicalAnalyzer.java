@@ -24,7 +24,12 @@ public class LexicalAnalyzer {
     List<Token> tokens = new ArrayList<>();
     StringBuilder contends = new StringBuilder();
     private final SymbolTable symbolTable;
-
+    enum LexerState {
+        START,
+        LETTER,
+        DIGIT,
+    }
+    
     public LexicalAnalyzer(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }

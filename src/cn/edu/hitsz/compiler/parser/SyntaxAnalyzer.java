@@ -12,7 +12,6 @@ import cn.edu.hitsz.compiler.symtab.SymbolTable;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * LR 语法分析驱动程序
  * <br>
@@ -30,6 +29,7 @@ public class SyntaxAnalyzer {
     private Status currentStatus; // 当前状态
     private List<Status> statusStack = new ArrayList<>(); // 状态栈
     private List<Object> symbolStack = new ArrayList<>(); // 符号栈 (终结符/非终结符)
+
     public SyntaxAnalyzer(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         this.tokenList = new ArrayList<>(); // 初始化词法单元列表
@@ -97,7 +97,7 @@ public class SyntaxAnalyzer {
         this.currentStatus = lrTable.getInit();
     }
 
-  public void run() {
+    public void run() {
         // 初始化状态栈，推入初始状态
         statusStack.add(lrTable.getInit());
 
@@ -108,7 +108,7 @@ public class SyntaxAnalyzer {
 
             // 从 LR 表中获取当前状态和当前 token 对应的动作
             Action action = lrTable.getAction(currentStatus, currentToken);
-            ActionKind action_kind = action.getKind(); 
+            ActionKind action_kind = action.getKind();
             if (action_kind == Action.ActionKind.Shift) {
                 // 1. Shift 操作
                 Status newStatus = action.getStatus();
@@ -128,7 +128,7 @@ public class SyntaxAnalyzer {
                         symbolStack.remove(symbolStack.size() - 1); // 删除最后一个元素
                     }
                 }
-                
+
                 // 获取规约后的非终结符，并压入符号栈
                 NonTerminal nonTerminal = production.head();
                 symbolStack.add(nonTerminal);
@@ -148,5 +148,5 @@ public class SyntaxAnalyzer {
             }
         }
     }
-    
+
 }

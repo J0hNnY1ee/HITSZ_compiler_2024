@@ -19,14 +19,13 @@ import java.util.Stack;
  * IRGenerator 类用于生成中间表示 (IR)。
  * 通过监听语法分析的移进和规约操作，生成相应的 IR 指令。
  */
-public class IRGenerator implements ActionObserver {
+public class bak_IRGenerator implements ActionObserver {
 
     // 符号表，用于存储变量及其类型信息
     public SymbolTable symbolTable;
 
-    // IRValueStack 用于存储符号分析时的中间结果
-    // private final Stack<Symbol> IRValueStack = new Stack<>();
-    private final Stack<IRValue> IRValueStack = new Stack<>();
+    // symbolStack 用于存储符号分析时的中间结果
+    private final Stack<bak_Symbol> symbolStack = new Stack<>();
 
     // instructionStack 用于存储生成的 IR 指令
     private final Stack<Instruction> instructionStack = new Stack<>();
@@ -41,18 +40,18 @@ public class IRGenerator implements ActionObserver {
     @Override
     public void whenShift(Status currentStatus, Token currentToken) {
         String numberPattern = "^[0-9]+$";
-        IRValue currentValue = null;
+        bak_Symbol currentSymbol = new bak_Symbol(currentToken);
 
         // 判断当前 Token 是否为整数常量
         if (currentToken.getText().matches(numberPattern)) {
             // 如果是整数常量，解析为 IRImmediate
-            currentValue = IRImmediate.of(Integer.parseInt(currentToken.getText()));
+            currentSymbol.value = IRImmediate.of(Integer.parseInt(currentToken.getText()));
         } else {
             // 否则，解析为变量（IRVariable）
-            currentValue = IRVariable.named(currentToken.getText());
+            currentSymbol.value = IRVariable.named(currentToken.getText());
         }
         // 将解析后的 Symbol 压入符号栈
-        IRValueStack.push(currentValue);
+        symbolStack.push(currentSymbol);
     }
 
     /**
@@ -63,123 +62,123 @@ public class IRGenerator implements ActionObserver {
      */
     @Override
     public void whenReduce(Status currentStatus, Production production) {
-        IRValue leftValue, rightValue;
-        IRValue nonTerminalSymbol = null;
+        bak_Symbol leftSymbol, rightSymbol;
+        bak_Symbol nonTerminalSymbol = new bak_Symbol(production.head());
         IRVariable tempVariable;
 
         switch (production.index()) {
             case 6: // 产生式: S -> id = E;
                 // 从栈中弹出 E，'='，id
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 '='
-                leftValue = IRValueStack.pop();
-                tempVariable = (IRVariable) leftValue;
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 '='
+                leftSymbol = symbolStack.pop();
+                tempVariable = (IRVariable) leftSymbol.value;
 
                 // 生成 MOV 指令，将右侧表达式的值赋给左侧变量
-                instructionStack.push(Instruction.createMov(tempVariable, rightValue));
+                instructionStack.push(Instruction.createMov(tempVariable, rightSymbol.value));
 
                 // 规约后，将非终结符 S 压入栈
-                nonTerminalSymbol = null;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = null;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 7: // 产生式: S -> return E;
                 // 从栈中弹出 E 和 'return'
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 'return'
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 'return'
 
                 // 生成 RET 指令
-                instructionStack.push(Instruction.createRet(rightValue));
+                instructionStack.push(Instruction.createRet(rightSymbol.value));
 
                 // 规约后，将非终结符 S 压入栈
-                nonTerminalSymbol = null;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = null;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 8: // 产生式: E -> E + A;
                 // 从栈中弹出 A，'+'，E
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 '+'
-                leftValue = IRValueStack.pop();
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 '+'
+                leftSymbol = symbolStack.pop();
 
                 // 生成临时变量来存储结果
                 tempVariable = IRVariable.temp();
 
                 // 生成 ADD 指令
-                instructionStack.push(Instruction.createAdd(tempVariable, leftValue, rightValue));
+                instructionStack.push(Instruction.createAdd(tempVariable, leftSymbol.value, rightSymbol.value));
 
                 // 将结果存入栈中
-                nonTerminalSymbol = tempVariable;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = tempVariable;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 9: // 产生式: E -> E - A;
                 // 从栈中弹出 A，'-'，E
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 '-'
-                leftValue = IRValueStack.pop();
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 '-'
+                leftSymbol = symbolStack.pop();
 
                 // 生成临时变量来存储结果
                 tempVariable = IRVariable.temp();
 
                 // 生成 SUB 指令
-                instructionStack.push(Instruction.createSub(tempVariable, leftValue, rightValue));
+                instructionStack.push(Instruction.createSub(tempVariable, leftSymbol.value, rightSymbol.value));
 
                 // 将结果存入栈中
-                nonTerminalSymbol = tempVariable;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = tempVariable;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 10: // 产生式: E -> A;
             case 12: // 产生式: A -> B;
             case 14: // 产生式: B -> id;
                 // 直接将 A 或 B 的值传递给 E 或 A
-                nonTerminalSymbol = IRValueStack.pop();
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = symbolStack.pop().value;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 11: // 产生式: A -> A * B;
                 // 从栈中弹出 B，'*'，A
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 '*'
-                leftValue = IRValueStack.pop();
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 '*'
+                leftSymbol = symbolStack.pop();
 
                 // 生成临时变量来存储结果
                 tempVariable = IRVariable.temp();
 
                 // 生成 MUL 指令
-                instructionStack.push(Instruction.createMul(tempVariable, leftValue, rightValue));
+                instructionStack.push(Instruction.createMul(tempVariable, leftSymbol.value, rightSymbol.value));
 
                 // 将结果存入栈中
-                nonTerminalSymbol = tempVariable;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = tempVariable;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 13: // 产生式: B -> ( E );
                 // 从栈中弹出 E 和括号
-                IRValueStack.pop(); // 弹出 ')'
-                rightValue = IRValueStack.pop();
-                IRValueStack.pop(); // 弹出 '('
+                symbolStack.pop(); // 弹出 ')'
+                rightSymbol = symbolStack.pop();
+                symbolStack.pop(); // 弹出 '('
 
                 // 传递 E 的值
-                nonTerminalSymbol = rightValue;
-                IRValueStack.push(nonTerminalSymbol);
+                nonTerminalSymbol.value = rightSymbol.value;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             case 15: // 产生式: B -> IntConst;
                 // 直接将 IntConst 的值传递给 B
-                rightValue = IRValueStack.pop();
-                nonTerminalSymbol = rightValue;
-                IRValueStack.push(nonTerminalSymbol);
+                rightSymbol = symbolStack.pop();
+                nonTerminalSymbol.value = rightSymbol.value;
+                symbolStack.push(nonTerminalSymbol);
                 break;
 
             default:
                 // 处理其他未定义的产生式，弹出产生式右部的所有符号
                 for (int i = 0; i < production.body().size(); i++) {
-                    IRValueStack.pop();
+                    symbolStack.pop();
                 }
                 // 将非终结符压入栈
-                IRValueStack.push(null);
+                symbolStack.push(new bak_Symbol(production.head()));
         }
     }
 
